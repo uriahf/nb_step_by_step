@@ -1,0 +1,2357 @@
+---
+title: "Decision Curve"
+subtitle: "Step by Step 👣"  
+author: 
+  - "Uriah Finkel"
+date: '`r Sys.Date()`'
+output:
+  xaringan::moon_reader:
+    css: xaringan-themer.css
+    nature:
+      slideNumberFormat: "%current%"
+      highlightStyle: github
+      highlightLines: true
+      ratio: 16:9
+      countIncrementalSlides: true
+---
+
+```{r setup, include=FALSE}
+options(htmltools.dir.version = FALSE)
+knitr::opts_chunk$set(
+  fig.width=9, fig.height=3.5, fig.retina=3,
+  out.width = "100%",
+  cache = FALSE,
+  echo = TRUE,
+  message = FALSE, 
+  warning = FALSE,
+  hiline = TRUE
+)
+```
+
+
+
+
+```{r xaringan-themer, include=FALSE, warning=FALSE}
+library(xaringanthemer)
+library(magrittr)
+library(xaringanExtra)
+library(reactable)
+# library(xaringancolor)
+
+style_duo_accent(
+  primary_color = "#3A405A",
+  secondary_color = "#F5DD90",
+  colors = c(red = "#ed1c24", green = "#007a45")
+)
+
+```
+
+```{r xaringan-scribble, echo=FALSE}
+xaringanExtra::use_scribble()
+```
+
+<style>
+
+.reg{
+ font-size: 20px
+}
+
+.opac{
+  opacity: 0.3;
+  font-size: 20px
+}
+
+</style>
+
+# Agenda
+
+- This lecture follows the article 'A simple, step-by-step  guide to interpreting decision curve analysis'.
+
+- Introduction: Motivation behind Decision Curve Analysis and how to draw a Decision Curve.
+
+- How to interpret a Decision Curve: Step by Step guide.
+
+- Some common questions about interpreting decision curves.
+
+---
+class: inverse center middle
+
+# Introduction
+
+---
+
+### Traditional Statistical Metric:
+
+- Discrimination: How well a prediction model can discriminate those with the outcome from those without the outcome. Examples: ROC Curve, AUROC, Sensitivity, Specificity, NPV, PPV, Lift and more...
+
+- Calibration: Agreement between observed outcomes and predictions. Examples: Calibration Curve, Calibration in the large, Calibration in the small, Brier Score...
+
+**.red[Problem!]**
+
+
+These metrics are not directly informative to clinical value, nor to full decision analytic approaches.
+
+**.green[Solution! Decision Curve Analysis]**:
+
+- Decision Curve Analysis calculates a clinical "Net Benefit" for one or more prediction models or diagnostic tests in comparison to default strategies of treating all or no patients. 
+
+---
+
+### How to draw a Decision Curve?:
+
+.pull-left[
+
+- On the X axis: Probability Threshold 
+
+
+- On the Y axis: 
+
+$$\begin{aligned}
+\small{
+\text{Net Benefit} = \frac{\text{TP}}{\text{TP + FP + TN + FN}} - \frac{\text{FP}}{\text{TP + FP + TN + FN}} * {\frac{{p_{t}}}{{1 - p_{t}}}}}
+\end{aligned}$$
+
+- Treat None strategy as a reference line:
+
+$$\begin{aligned}
+\small{
+\text{Net Benefit Treat None} = 0}
+\end{aligned}$$
+
+- Treat All strategy as a reference line:
+
+$$\begin{aligned}
+\small{
+\text{Net Benefit Treat All} = {\text{Prevalence}} -  {\text{(1 - Prevalence)}} *{\frac{{p_{t}}}{{1 - p_{t}}}}}
+\end{aligned}$$
+
+
+]
+
+.pull-right[
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+
+library(MASS) 
+data.set <- birthwt 
+model = glm(low ~ age + lwt, family=binomial(link="logit"), data=data.set) 
+data.set$predlow = predict(model, type="response") 
+library(magrittr)
+
+dc <- rtichoke::create_decision_curve(
+  probs = list(data.set$predlow),
+  reals = list(data.set$low),
+  interactive = TRUE, size = 500
+) %>% 
+  plotly::animation_slider(
+    currentvalue = list(prefix = "Probability Threshold: ", 
+                        font = list(color="black"),
+                        xanchor = "left"),
+    pad = list(t = 50), init = 5
+  )  %>% 
+  plotly::layout(xaxis = list(title = ''))
+
+dc
+
+```
+
+
+]
+
+---
+class: inverse center middle
+
+# Step 1 
+# 👣: Benefit is **.green[Good]**
+
+---
+
+### Step 1 👣: Benefit is **.green[Good]**
+
+```{r include=FALSE}
+reactable::reactable(head(iris))
+```
+
+
+.center[
+#🙂
+# **.green[Green]** = **.green[Good]**  
+
+]
+.center[
+#🙁
+# **.red[Red]** = **.red[Bad]** 
+]
+---
+
+
+### Step 1 👣: Benefit is **.green[Good]**
+
+.center[
+<img src="Decision_Curve_Step_by_Step_files/Maccabi_Haifa_FC_logo.svg" width="100" height="100" />
+# **.green[Green]** = **.green[Good]**  
+]
+.center[
+<img src="Decision_Curve_Step_by_Step_files/Hapoel_Haifa_Football_Club_Logo.png" width="90" height="90" />
+# **.red[Red]** = **.red[Bad]**   
+
+```{r include=FALSE}
+reactable::reactable(head(iris))
+
+```
+
+]
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  TeX: {
+    Macros: {
+      red: ["{\\color{red}{#1}}", 1],
+      green: ["{\\color{green}{#1}}", 1],
+    },
+    loader: {load: ['[tex]/color']},
+    tex: {packages: {'[+]': ['color']}}
+  }
+});
+</script>
+
+---
+### Step 1 👣: Benefit is **.green[Good]**
+
+.center[
+
+## Infected and Predicted as Infected - **.green[Good]**
+
+#💊<br>🤢
+<br>
+
+```{r echo=FALSE}
+tibble::tribble(
+  ~"type", ~"predicted_positive", ~"predicted_negative",
+  "Real Positive", "TP", "FN",
+  "Real Negative", "FP", "TN"
+) %>% 
+  reactable::reactable(
+    sortable = FALSE,
+            fullWidth = FALSE,
+            borderless = FALSE,
+            defaultColDef = reactable::colDef(
+              align = "center",
+              headerStyle  = list(fontWeight = 100)
+            ),
+            columns = list(
+              type = reactable::colDef(
+                name = "",
+                align = "left",
+                style = list(fontWeight = 100),
+                minWidth = 200
+              ),
+              predicted_positive = reactable::colDef(
+                name = "Predicted Positive",
+                style = function(value) {
+                  color <- if (value == "TP") {
+                    "lightgreen"
+                  }
+                  
+                  list(fontWeight = 600, background = color)
+                },
+                minWidth = 200
+            ),
+            predicted_negative = reactable::colDef(
+              name = "Predicted Negative",
+              style = function(value) {
+                list(fontWeight = 600)
+              },
+                minWidth = 200
+            )
+            )
+  )
+```
+]
+
+
+
+
+
+---
+
+### Step 1 👣: Benefit is **.green[Good]**
+.center[
+
+## Not-Infected and Predicted as Infected - .red[BAD]
+
+#💊<br>🤨
+<br>
+
+```{r echo=FALSE}
+tibble::tribble(
+  ~"type", ~"predicted_positive", ~"predicted_negative",
+  "Real Positive", "TP", "FN",
+  "Real Negative", "FP", "TN"
+) %>% 
+  reactable::reactable(
+    sortable = FALSE,
+            fullWidth = FALSE,
+            borderless = FALSE,
+            defaultColDef = reactable::colDef(
+              align = "center",
+              headerStyle  = list(fontWeight = 100),
+              minWidth = 200
+            ),
+            columns = list(
+              type = reactable::colDef(
+                name = "",
+                align = "left",
+                style = list(fontWeight = 100)
+              ),
+              predicted_positive = reactable::colDef(
+                name = "Predicted Positive",
+                style = function(value) {
+                  color <- if (value == "FP") {
+                    "pink"
+                   } #else if (value == "FP") {
+                  #   "pink"
+                   # }
+                  list(fontWeight = 600, background = color)
+                }
+            ),
+            predicted_negative = reactable::colDef(
+              name = "Predicted Negative",
+              style = function(value) {
+              #   color <- if (value == "TN") {
+              #     "lightgreen"
+              #   } else if (value == "FN") {
+              #     "pink"
+              #   }
+                list(fontWeight = 600)
+              }
+            )
+            )
+  )
+```
+
+]
+
+---
+
+### Step 1 👣: Benefit is **.green[Good]**
+.center[
+
+## Infected and Predicted as Not-Infected - .red[BAD]
+
+#&nbsp;<br>🤢
+<br>
+
+```{r echo=FALSE}
+tibble::tribble(
+  ~"type", ~"predicted_positive", ~"predicted_negative",
+  "Real Positive", "TP", "FN",
+  "Real Negative", "FP", "TN"
+) %>% 
+  reactable::reactable(
+    sortable = FALSE,
+            fullWidth = FALSE,
+            borderless = FALSE,
+            defaultColDef = reactable::colDef(
+              align = "center",
+              headerStyle  = list(fontWeight = 100),
+              minWidth = 200
+            ),
+            columns = list(
+              type = reactable::colDef(
+                name = "",
+                align = "left",
+                style = list(fontWeight = 100)
+              ),
+              predicted_positive = reactable::colDef(
+                name = "Predicted Positive",
+                style = function(value) {
+                  list(fontWeight = 600)
+                }
+            ),
+            predicted_negative = reactable::colDef(
+              name = "Predicted Negative",
+              style = function(value) {
+                color <- if (value == "FN") {
+                  "pink"
+                 } #else if (value == "FN") {
+              #     "pink"
+              #   }
+                list(fontWeight = 600, background = color)
+              }
+            )
+            )
+  )
+```
+
+]
+
+
+---
+
+### Step 1 👣: Benefit is **.green[Good]**
+.center[
+
+## Not-Infected and Predicted as Not-Infected - **.green[Good]**
+
+#&nbsp;<br>🤨
+<br>
+
+```{r echo=FALSE}
+tibble::tribble(
+  ~"type", ~"predicted_positive", ~"predicted_negative",
+  "Real Positive", "TP", "FN",
+  "Real Negative", "FP", "TN"
+) %>% 
+  reactable::reactable(
+    sortable = FALSE,
+            fullWidth = FALSE,
+            borderless = FALSE,
+            defaultColDef = reactable::colDef(
+              align = "center",
+              headerStyle  = list(fontWeight = 100),
+              minWidth = 200
+            ),
+            columns = list(
+              type = reactable::colDef(
+                name = "",
+                align = "left",
+                style = list(fontWeight = 100)
+              ),
+              predicted_positive = reactable::colDef(
+                name = "Predicted Positive",
+                style = function(value) {
+                  list(fontWeight = 600)
+                }
+            ),
+            predicted_negative = reactable::colDef(
+              name = "Predicted Negative",
+              style = function(value) {
+                color <- if (value == "TN") {
+                  "lightgreen"
+                 } #else if (value == "FN") {
+              #     "pink"
+              #   }
+                list(fontWeight = 600, background = color)
+              }
+            )
+            )
+  )
+```
+
+]
+
+---
+
+### Step 1 👣: Benefit is **.green[Good]**
+.center[
+
+## Predicted as Infected - Not Good nor Bad
+
+#💊<br>😷
+<br>
+
+```{r echo=FALSE}
+tibble::tribble(
+  ~"type", ~"predicted_positive", ~"predicted_negative",
+  "Real Positive", "TP", "FN",
+  "Real Negative", "FP", "TN"
+) %>% 
+  reactable::reactable(
+    sortable = FALSE,
+            fullWidth = FALSE,
+            borderless = FALSE,
+            defaultColDef = reactable::colDef(
+              align = "center",
+              headerStyle  = list(fontWeight = 100),
+              minWidth = 200
+            ),
+            columns = list(
+              type = reactable::colDef(
+                name = "",
+                align = "left",
+                style = list(fontWeight = 100)
+              ),
+              predicted_positive = reactable::colDef(
+                name = "Predicted Positive",
+                style = function(value) {
+                  list(fontWeight = 600, background = "lightgrey")
+                }
+            ),
+            predicted_negative = reactable::colDef(
+              name = "Predicted Negative",
+              style = function(value) {
+                list(fontWeight = 600)
+              }
+            )
+            )
+  )
+```
+
+]
+
+
+---
+
+### Step 1 👣: Benefit is **.green[Good]**
+.center[
+
+## Predicted as Not-Infected - Not Good nor Bad
+
+#&nbsp;<br>😷
+<br>
+
+```{r echo=FALSE}
+tibble::tribble(
+  ~"type", ~"predicted_positive", ~"predicted_negative",
+  "Real Positive", "TP", "FN",
+  "Real Negative", "FP", "TN"
+) %>% 
+  reactable::reactable(
+    sortable = FALSE,
+            fullWidth = FALSE,
+            borderless = FALSE,
+            defaultColDef = reactable::colDef(
+              align = "center",
+              headerStyle  = list(fontWeight = 100),
+              minWidth = 200
+            ),
+            columns = list(
+              type = reactable::colDef(
+                name = "",
+                align = "left",
+                style = list(fontWeight = 100)
+              ),
+              predicted_positive = reactable::colDef(
+                name = "Predicted Positive",
+                style = function(value) {
+                  list(fontWeight = 600)
+                }
+            ),
+            predicted_negative = reactable::colDef(
+              name = "Predicted Negative",
+              style = function(value) {
+                list(fontWeight = 600, background = "lightgrey")
+              }
+            )
+            )
+  )
+```
+
+]
+
+---
+
+### Step 1 👣: Benefit is **.green[Good]**
+
+$$\begin{aligned}
+\text{Net Benefit} = \frac{\text{TP}}{\text{TP + FP + TN + FN}} - \frac{\text{FP}}{\text{TP + FP + TN + FN}} * {\frac{{p_{t}}}{{1 - p_{t}}}}
+\end{aligned}$$
+
+
+---
+
+### Step 1 👣: Benefit is **.green[Good]**
+
+$$\begin{aligned}
+\text{Net Benefit} = \frac{\text{TP}}{\text{N}} - \frac{\text{FP}}{\text{N}} * {\frac{{p_{t}}}{{1 - p_{t}}}}
+\end{aligned}$$
+
+--
+
+$$\begin{aligned}
+\text{Sensitivity } = \frac{\text{TP}}{\text{TP + FN}} 
+\end{aligned}$$
+
+--
+
+$$\begin{aligned}
+\text{Specificity} = \frac{\text{TN}}{\text{TN + FP}}
+\end{aligned}$$
+
+--
+
+$$\begin{aligned}
+{\text{Prevalence}} = \frac{\text{TP + FN}}{\text{TP + FP + TN + FN}}
+\end{aligned}$$
+---
+
+### Step 1 👣: Benefit is **.green[Good]**
+
+$$\begin{aligned}
+\text{Net Benefit} = \frac{\text{TP}}{\text{N}} - \frac{\text{FP}}{\text{N}} * {\frac{{p_{t}}}{{1 - p_{t}}}}
+\end{aligned}$$
+
+
+$$\begin{aligned}
+\text{Sensitivity } = \frac{\text{TP}}{\text{Real Positives}} 
+\end{aligned}$$
+
+
+$$\begin{aligned}
+\text{Specificity} = \frac{\text{TN}}{\text{Real Negatives}}
+\end{aligned}$$
+
+
+$$\begin{aligned}
+{\text{Prevalence}} = \frac{\text{Real Positive}}{\text{N}}
+\end{aligned}$$
+
+---
+
+### Step 1 👣: Benefit is **.green[Good]**
+
+$$\begin{aligned}
+\text{Net Benefit} = \frac{\text{TP}}{\text{N}} - \frac{\text{FP}}{\text{N}} * {\frac{{p_{t}}}{{1 - p_{t}}}}
+\end{aligned}$$
+
+
+$$\begin{aligned}
+\text{Sensitivity } = \frac{\text{TP}}{\text{Real Positives}} 
+\end{aligned}$$
+
+
+$$\begin{aligned}
+\text{1 - Specificity} = \frac{\text{FP}}{\text{Real Negatives}}
+\end{aligned}$$
+
+
+$$\begin{aligned}
+{\text{Prevalence}} = \frac{\text{Real Positives}}{\text{N}}
+\end{aligned}$$
+
+--
+
+$$\begin{aligned}
+{\text{1 - Prevalence}} = \frac{\text{Real Negatives}}{\text{N}}
+\end{aligned}$$
+
+--
+
+$$\begin{aligned}
+\text{Net Benefit} = {\text{Sensitivity}} * {\text{Prevalence}} - {\text{(1 - Specificity)}} * {\text{(1 - Prevalence)}} *{\frac{{p_{t}}}{{1 - p_{t}}}}
+\end{aligned}$$
+
+---
+
+### Step 1 👣: Benefit is **.green[Good]**
+
+$$\begin{aligned}
+\green{\bf{Net Benefit}} = \frac{\green{\bf{TP}}}{\text{N}} - \frac{\red{\bf{FP}}}{\text{N}} * {\frac{{p_{t}}}{{1 - p_{t}}}}
+\end{aligned}$$
+
+
+$$\begin{aligned}
+\green{\bf{Sensitivity}} = \frac{\green{\bf{TP}}}{\text{Real Positives}} 
+\end{aligned}$$
+
+
+$$\begin{aligned}
+\red{\bf{1 - Specificity}} = \frac{\bf{\red{FP}}}{\text{Real Negatives}}
+\end{aligned}$$
+
+
+$$\begin{aligned}
+{\text{Prevalence}} = \frac{\text{Real Positives}}{\text{N}}
+\end{aligned}$$
+
+
+$$\begin{aligned}
+{\text{1 - Prevalence}} = \frac{\text{Real Negatives}}{\text{N}}
+\end{aligned}$$
+
+
+$$\begin{aligned}
+\green{\bf{Net Benefit}} = {\green{\bf{Sensitivity}}} * {\text{Prevalence}} - {\red{\bf{(1 - Specificity)}}} * {\text{(1 - Prevalence)}} *{\frac{{p_{t}}}{{1 - p_{t}}}}
+\end{aligned}$$
+
+
+---
+
+### Step 1 👣: Benefit is **.green[Good]**
+
+$$\begin{aligned}
+\green{\bf{Net Benefit}} = \frac{\green{\bf{TP}}}{\text{N}} - \frac{\red{\bf{FP}}}{\text{N}} * {\frac{{p_{t}}}{{1 - p_{t}}}}
+\end{aligned}$$
+
+
+$$\begin{aligned}
+\green{\bf{Sensitivity}} = \frac{\green{\bf{TP}}}{\text{Real Positives}} 
+\end{aligned}$$
+
+
+$$\begin{aligned}
+\red{\bf{1 - Specificity}} = \frac{\bf{\red{FP}}}{\text{Real Negatives}}
+\end{aligned}$$
+
+
+$$\begin{aligned}
+{\text{Prevalence}} = \frac{\text{Real Positives}}{\text{N}}
+\end{aligned}$$
+
+
+$$\begin{aligned}
+{\text{1 - Prevalence}} = \frac{\text{Real Negatives}}{\text{N}}
+\end{aligned}$$
+
+
+$$\begin{aligned}
+\green{\bf{Net Benefit}} = {\green{\bf{Sensitivity}}} * {\text{Prevalence}} - {\red{\bf{(1 - Specificity)}}} * {\text{(1 - Prevalence)}} *{\frac{{p_{t}}}{{1 - p_{t}}}}
+\end{aligned}$$
+
+
+$$\begin{aligned}
+\text{Net Benefit Treat All} = {\green{\bf{1}}} * {\text{Prevalence}} - {\red{\bf{(1 - 0)}}} * {\text{(1 - Prevalence)}} *{\frac{{p_{t}}}{{1 - p_{t}}}}
+\end{aligned}$$
+
+---
+
+### Step 1 👣: Benefit is **.green[Good]**
+
+$$\begin{aligned}
+\green{\bf{Net Benefit}} = \frac{\green{\bf{TP}}}{\text{N}} - \frac{\red{\bf{FP}}}{\text{N}} * {\frac{{p_{t}}}{{1 - p_{t}}}}
+\end{aligned}$$
+
+
+$$\begin{aligned}
+\green{\bf{Sensitivity}} = \frac{\green{\bf{TP}}}{\text{Real Positives}} 
+\end{aligned}$$
+
+
+$$\begin{aligned}
+\red{\bf{1 - Specificity}} = \frac{\bf{\red{FP}}}{\text{Real Negatives}}
+\end{aligned}$$
+
+
+$$\begin{aligned}
+{\text{Prevalence}} = \frac{\text{Real Positives}}{\text{N}}
+\end{aligned}$$
+
+
+$$\begin{aligned}
+{\text{1 - Prevalence}} = \frac{\text{Real Negatives}}{\text{N}}
+\end{aligned}$$
+
+
+$$\begin{aligned}
+\green{\bf{Net Benefit}} = {\green{\bf{Sensitivity}}} * {\text{Prevalence}} - {\red{\bf{(1 - Specificity)}}} * {\text{(1 - Prevalence)}} *{\frac{{p_{t}}}{{1 - p_{t}}}}
+\end{aligned}$$
+
+
+$$\begin{aligned}
+\text{Net Benefit Treat All} = {\text{Prevalence}} -  {\text{(1 - Prevalence)}} *{\frac{{p_{t}}}{{1 - p_{t}}}}
+\end{aligned}$$
+---
+
+### Step 1 👣: Benefit is **.green[Good]**
+
+$$\begin{aligned}
+\green{\bf{Net Benefit}} = \frac{\green{\bf{TP}}}{\text{N}} - \frac{\red{\bf{FP}}}{\text{N}} * {\frac{{p_{t}}}{{1 - p_{t}}}}
+\end{aligned}$$
+
+
+$$\begin{aligned}
+\green{\bf{Sensitivity}} = \frac{\green{\bf{TP}}}{\text{Real Positives}} 
+\end{aligned}$$
+
+
+$$\begin{aligned}
+\red{\bf{1 - Specificity}} = \frac{\bf{\red{FP}}}{\text{Real Negatives}}
+\end{aligned}$$
+
+
+$$\begin{aligned}
+{\text{Prevalence}} = \frac{\text{Real Positives}}{\text{N}}
+\end{aligned}$$
+
+
+$$\begin{aligned}
+{\text{1 - Prevalence}} = \frac{\text{Real Negatives}}{\text{N}}
+\end{aligned}$$
+
+
+$$\begin{aligned}
+\green{\bf{Net Benefit}} = {\green{\bf{Sensitivity}}} * {\text{Prevalence}} - {\red{\bf{(1 - Specificity)}}} * {\text{(1 - Prevalence)}} *{\frac{{p_{t}}}{{1 - p_{t}}}}
+\end{aligned}$$
+
+
+$$\begin{aligned}
+\text{Net Benefit Treat None} = {\green{\bf{0}}} * {\text{Prevalence}} - {\red{\bf{(1 - 1)}}} * {\text{(1 - Prevalence)}} *{\frac{{p_{t}}}{{1 - p_{t}}}}
+\end{aligned}$$
+
+---
+
+### Step 1 👣: Benefit is **.green[Good]**
+
+$$\begin{aligned}
+\green{\bf{Net Benefit}} = \frac{\green{\bf{TP}}}{\text{N}} - \frac{\red{\bf{FP}}}{\text{N}} * {\frac{{p_{t}}}{{1 - p_{t}}}}
+\end{aligned}$$
+
+
+$$\begin{aligned}
+\green{\bf{Sensitivity}} = \frac{\green{\bf{TP}}}{\text{Real Positives}} 
+\end{aligned}$$
+
+
+$$\begin{aligned}
+\red{\bf{1 - Specificity}} = \frac{\bf{\red{FP}}}{\text{Real Negatives}}
+\end{aligned}$$
+
+
+$$\begin{aligned}
+{\text{Prevalence}} = \frac{\text{Real Positives}}{\text{N}}
+\end{aligned}$$
+
+
+$$\begin{aligned}
+{\text{1 - Prevalence}} = \frac{\text{Real Negatives}}{\text{N}}
+\end{aligned}$$
+
+
+$$\begin{aligned}
+\green{\bf{Net Benefit}} = {\green{\bf{Sensitivity}}} * {\text{Prevalence}} - {\red{\bf{(1 - Specificity)}}} * {\text{(1 - Prevalence)}} *{\frac{{p_{t}}}{{1 - p_{t}}}}
+\end{aligned}$$
+
+
+$$\begin{aligned}
+\text{Net Benefit Treat None} = 0
+\end{aligned}$$
+---
+class: inverse center middle
+
+# Step 2 👣: 
+# Preference Differ
+
+---
+
+### Step 2 👣: Preference Differ
+
+
+.pull-left[
+
+Low Probability Threshold means that I'm worried about the **outcome**:
+
+- I'm worried about **Prostate Cancer** 🦀
+
+- I'm worried about **Heart Disease** 💔
+
+- I'm worried about **Infection** 🤢
+
+]
+
+.pull-right[
+
+```{r echo=FALSE}
+
+library('plotly')
+# Create figure
+dc %>%   # Add trace
+  plotly::layout(
+    images = list(
+      list(
+        # Add images
+        source =  "https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/91402b30-6488-4c64-9fd5-5a1dc9ea8bd6/deypsl5-59796e39-aec1-426e-befe-8b460e6648ef.png/v1/fill/w_567,h_538,strp/mr__worry_by_enzothemii_deypsl5-fullview.png?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7ImhlaWdodCI6Ijw9NTM4IiwicGF0aCI6IlwvZlwvOTE0MDJiMzAtNjQ4OC00YzY0LTlmZDUtNWExZGM5ZWE4YmQ2XC9kZXlwc2w1LTU5Nzk2ZTM5LWFlYzEtNDI2ZS1iZWZlLThiNDYwZTY2NDhlZi5wbmciLCJ3aWR0aCI6Ijw9NTY3In1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmltYWdlLm9wZXJhdGlvbnMiXX0.Q5L0SXP17MyiaymICWE9uhQZmB_SODDWzxJPmk0pcLk",
+        xref = "x",
+        yref = "y",
+        x = 0.05,
+        y = -0.015,
+        sizex = 0.13,
+        sizey = 0.13,
+        layer = "below"
+      )#,
+      # list(
+      #   # Add images
+      #   source =  "https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/91402b30-6488-4c64-9fd5-5a1dc9ea8bd6/deypsl5-59796e39-aec1-426e-befe-8b460e6648ef.png/v1/fill/w_567,h_538,strp/mr__worry_by_enzothemii_deypsl5-fullview.png?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7ImhlaWdodCI6Ijw9NTM4IiwicGF0aCI6IlwvZlwvOTE0MDJiMzAtNjQ4OC00YzY0LTlmZDUtNWExZGM5ZWE4YmQ2XC9kZXlwc2w1LTU5Nzk2ZTM5LWFlYzEtNDI2ZS1iZWZlLThiNDYwZTY2NDhlZi5wbmciLCJ3aWR0aCI6Ijw9NTY3In1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmltYWdlLm9wZXJhdGlvbnMiXX0.Q5L0SXP17MyiaymICWE9uhQZmB_SODDWzxJPmk0pcLk",
+      #   xref = "x",
+      #   yref = "y",
+      #   x = 0.85,
+      #   y = -0.015,
+      #   sizex = 0.13,
+      #   sizey = 0.13,
+      #   layer = "below"
+      # )
+    )
+  )  %>% 
+plotly::layout(xaxis = list(range = list(-0.2, 1)),
+               yaxis = list(range = list(-0.1, 0.34)))  %>% 
+plotly::layout(width=500, 
+               height=500)  %>%
+  plotly::layout(
+    shapes = list(
+      list(
+    type = "line",
+    y0 = 0.24,
+    y1 = 1,
+    yref = "paper",
+    x0 = 0.1,
+    x1 = 0.1,
+    line = list(color = "black", dash="dot")
+  ))
+  )
+
+```
+]
+
+
+---
+
+### Step 2 👣: Preference Differ
+
+.pull-left[
+
+High Probability Threshold means that I'm worried about the **Intervention**:
+
+- I'm worried about **Biopsy** 💉
+
+- I'm worried about **Statins** 💊
+
+- I'm worried about **Antibiotics** 💊
+
+]
+
+.pull-right[
+
+```{r echo=FALSE}
+
+# Create figure
+dc %>%   # Add trace
+  plotly::layout(
+    images = list(
+      # list(
+      #   # Add images
+      #   source =  "https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/91402b30-6488-4c64-9fd5-5a1dc9ea8bd6/deypsl5-59796e39-aec1-426e-befe-8b460e6648ef.png/v1/fill/w_567,h_538,strp/mr__worry_by_enzothemii_deypsl5-fullview.png?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7ImhlaWdodCI6Ijw9NTM4IiwicGF0aCI6IlwvZlwvOTE0MDJiMzAtNjQ4OC00YzY0LTlmZDUtNWExZGM5ZWE4YmQ2XC9kZXlwc2w1LTU5Nzk2ZTM5LWFlYzEtNDI2ZS1iZWZlLThiNDYwZTY2NDhlZi5wbmciLCJ3aWR0aCI6Ijw9NTY3In1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmltYWdlLm9wZXJhdGlvbnMiXX0.Q5L0SXP17MyiaymICWE9uhQZmB_SODDWzxJPmk0pcLk",
+      #   xref = "x",
+      #   yref = "y",
+      #   x = 0.05,
+      #   y = -0.015,
+      #   sizex = 0.13,
+      #   sizey = 0.13,
+      #   layer = "below"
+      # ),
+      list(
+        # Add images
+        source =  "https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/91402b30-6488-4c64-9fd5-5a1dc9ea8bd6/deypsl5-59796e39-aec1-426e-befe-8b460e6648ef.png/v1/fill/w_567,h_538,strp/mr__worry_by_enzothemii_deypsl5-fullview.png?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7ImhlaWdodCI6Ijw9NTM4IiwicGF0aCI6IlwvZlwvOTE0MDJiMzAtNjQ4OC00YzY0LTlmZDUtNWExZGM5ZWE4YmQ2XC9kZXlwc2w1LTU5Nzk2ZTM5LWFlYzEtNDI2ZS1iZWZlLThiNDYwZTY2NDhlZi5wbmciLCJ3aWR0aCI6Ijw9NTY3In1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmltYWdlLm9wZXJhdGlvbnMiXX0.Q5L0SXP17MyiaymICWE9uhQZmB_SODDWzxJPmk0pcLk",
+        xref = "x",
+        yref = "y",
+        x = 0.85,
+        y = -0.015,
+        sizex = 0.13,
+        sizey = 0.13,
+        layer = "below"
+      )
+    )
+  )  %>% 
+plotly::layout(xaxis = list(range = list(-0.2, 1)),
+               yaxis = list(range = list(-0.1, 0.34)))  %>% 
+plotly::layout(width=500, 
+               height=500)  %>%
+  plotly::layout(
+    shapes = list(
+      list(
+    type = "line",
+    y0 = 0.24,
+    y1 = 1,
+    yref = "paper",
+    x0 = 0.9,
+    x1 = 0.9,
+    line = list(color = "black", dash="dot")
+  ))
+  )
+
+```
+]
+
+
+---
+class: inverse center middle
+
+# Step 3 👣: 
+# Unit of Preference = Threshold Probability
+
+---
+
+### Step 3 👣: Unit of Preference = Threshold Probability
+.pull-left[
+
+.red[REMEMBER]: almost always (specially in Health Care) -
+
+$$\text{TP} \neq \text{FP}$$
+A good example for bad practice in evaluating performance of prediction model is the Youden's J statistics:
+$${\displaystyle J={\frac {\text{TP}}{{\text{TP}}+{\text{FN}}}}+{\frac {\text{TN}}{{\text{TN}}+{\text{FP}}}}-1}$$
+Maximizing Youden's J statistic might lead to a Probability Threshold that will do more harm than good, even if the prediction model is accurate!
+
+]
+
+.pull-right[
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+perf_dat <- rtichoke::prepare_performance_data(
+  probs = list(data.set$predlow),
+  reals = list(data.set$low)
+) 
+
+j_idx <- perf_dat %>% 
+  dplyr::mutate(j_idx = sensitivity + specificity - 1) %>% 
+  dplyr::filter(j_idx == max(j_idx)) %>% 
+  dplyr::mutate(sensitivity = sensitivity + 0.02,
+                FPR = FPR - 0.02) %>% 
+  dplyr::select(sensitivity, FPR)
+
+
+perf_dat %>% 
+  rtichoke::plot_roc_curve(interactive = TRUE, size = 500) %>% 
+  plotly::add_annotations(
+    text = "Youden's J Index",
+    data = j_idx,
+    x =~ FPR,
+    y =~ sensitivity
+  ) %>% 
+  plotly::animation_slider(
+    currentvalue = list(font = list(color="black"),
+                        xanchor = "left"),
+    pad = list(t = 50)
+  )
+
+```
+]
+
+---
+
+### Step 3 👣: Unit of Preference = Threshold Probability
+
+
+.pull-left[
+
+I wouldn’t give
+more than 4 antibiotics in order to help 1 infected
+patient.
+
+
+If a patient’s risk was above 20% I will give him antibiotics, otherwise I won't.
+
+The risk of 20% is an odds of 1:4, so in using a
+threshold probability of 20%, the doctor is telling us
+“missing an infected patiant is 4 times worse than giving antibiotics to a healthy patient."
+
+$$p_t = \frac{1}{1 + 4} = 0.2$$
+$$\frac{p_t}{1 - p_t} = \frac{0.2}{1 - 0.2} = \frac{1}{4}$$
+
+]
+
+
+.pull-right[
+
+```{r echo=FALSE}
+
+
+dc_performance_data <- rtichoke::prepare_performance_data(
+  probs = list(data.set$predlow),
+  reals = list(data.set$low)
+) %>% 
+  rtichoke:::add_hover_text_to_performance_data("one model", 
+                                     curve = "decision") %>% 
+  dplyr::mutate(
+    slider_text = 
+      glue::glue("Probability Threshold: {stringr::str_pad(threshold, 8, 'right')} \\
+                  Odds: 1:{round((1 - threshold) / threshold, digits = 2)}")
+  )
+
+basic_dc <- rtichoke:::create_reference_lines_for_plotly(
+  curve = "decision",
+  performance_table_type = "one model",
+  prevalence = rtichoke:::get_prevalence_from_performance_data(
+    dc_performance_data),
+  performance_data = dc_performance_data) %>% 
+  rtichoke:::add_lines_and_markers_from_performance_data(
+    performance_data = dc_performance_data,
+    performance_data_type = "one model",
+    threshold,
+    NB) %>%
+  plotly::add_markers(
+      data = dc_performance_data, 
+      x =~ threshold,
+      y =~ NB, 
+      hoverinfo = "text", 
+      text = ~text,
+      frame =~ slider_text,
+      marker = list(
+        size = 12, 
+        line = list(
+          width = 3,
+          color = I("black")), 
+        color = "#f6e3be")) %>%
+  rtichoke:::remove_grid_lines_from_plotly() %>% 
+  rtichoke:::set_axis_titles("decision") %>% 
+  plotly::config(displayModeBar = FALSE)  %>% 
+  plotly::layout(xaxis = list(range = list(-0.2, 1)),
+                 yaxis = list(range = list(-0.1, 0.34)))  %>% 
+  plotly::layout(width=500, 
+                 height=500) 
+
+dc_step3 <- basic_dc %>% 
+  plotly::layout(
+    xaxis = list(
+      ticktext = list("0", "0.2<br><b>(1:4)</b>", "0.4<br><b>(2:3)</b>", "0.6<br><b>(3:2)</b>", "0.8<br><b>(4:1)</b>", "1"), 
+      tickvals = list(0, 0.2, 0.4, 0.6, 0.8, 1),
+      tickmode = "array"
+    )) %>% 
+  plotly::animation_slider(
+    currentvalue = list(prefix = "", 
+                        font = list(color="black"),
+                        xanchor = "left"),
+    pad = list(t = 50)
+  )  %>% 
+  plotly::layout(xaxis = list(title = ''))
+
+
+dc_step3
+
+```
+]
+
+
+---
+
+### Step 3 👣: Unit of Preference = Threshold Probability
+
+.pull-left[
+
+I will be indifferent 😐 for having 1 **.green[TP]** for 4 **.red[FP]**
+$$p_t = \frac{1}{1 + 4} = 0.2$$
+$$\frac{p_t}{1 - p_t} = \frac{0.2}{1 - 0.2} = \frac{1}{4}$$
+In that case the Net Benefit of using the model will be:
+
+$$\begin{aligned}[t]
+{\text{Net Benefit}} &= {\frac{\text{1}}{\text{5}} - \frac{\text{4}}{\text{5}} * {\frac{1}{4}} = 0}
+\end{aligned}$$
+
+]
+
+.pull-right[
+![](Decision_Curve_Step_by_Step_files/indifferent.svg)
+
+]
+
+
+---
+
+### Step 3 👣: Unit of Preference = Threshold Probability
+
+.pull-left[
+
+I will be sad 🙁 for having 1 **.green[TP]** for 5 **.red[FP]**
+$$p_t = \frac{1}{1 + 4} = 0.2$$
+$$\frac{p_t}{1 - p_t} = \frac{0.2}{1 - 0.2} = \frac{1}{4}$$
+In that case the Net Benefit of using the model will be:
+
+$$\begin{aligned}[t]
+{\text{Net Benefit}} &= {\frac{\text{1}}{\text{6}} - \frac{\text{5}}{\text{6}} * {\frac{1}{4}} = -0.04166'}
+\end{aligned}$$
+
+]
+
+.pull-right[
+![](Decision_Curve_Step_by_Step_files/sad.svg)
+
+]
+
+
+---
+
+### Step 3 👣: Unit of Preference = Threshold Probability
+
+.pull-left[
+
+I will be happy 🙂 for having 1 **.green[TP]** for 3 **.red[FP]**
+$$p_t = \frac{1}{1 + 4} = 0.2$$
+$$\frac{p_t}{1 - p_t} = \frac{0.2}{1 - 0.2} = \frac{1}{4}$$
+In that case the Net Benefit of using the model will be:
+
+$$\begin{aligned}[t]
+{\text{Net Benefit}} &= {\frac{\text{1}}{\text{4}} - \frac{\text{3}}{\text{4}} * {\frac{1}{4}} = 0.0625}
+\end{aligned}$$
+
+]
+
+.pull-right[
+![](Decision_Curve_Step_by_Step_files/happy.svg)
+
+]
+
+---
+class: inverse center middle
+
+
+# Step 4 👣: 
+# Benefit is actually Net Benefit
+
+
+---
+background-image: url("Decision_Curve_Step_by_Step_files/American_wines_can_into_chateau.png")
+background-size: contain
+
+
+<!-- ![](Decision_Curve_Step_by_Step_files/American_wines_can_into_chateau.png) -->
+
+
+---
+
+### Step 4 👣: Benefit is actually Net Benefit
+
+
+Let's think in terms of money 💸
+
+A wine importer buys €1m of wine from France and sells it in the USA for $1.5 🍷
+
+--
+
+Net Benefit = **.green[Income]** - **.red[Expenditure]**
+
+Net Benefit = **.green[1.5m$]** - **.red[1m€]** = ? 🤔
+
+--
+
+Let's say that 1€ is worth 1.25$ 
+
+Exchange-Rate = 1.25 ($ / €)
+
+1m€ = 1m * 1.25$ 
+
+--
+
+Net Benefit = **.green[1.5m$]** - **.red[1.25m$]** = **.green[250,000$]**
+
+Which is the equivalent of being given 250,000$:
+
+Net Benefit = **.green[250,000$]** - **.red[0$]** = **.green[250,000$]**
+
+---
+### Step 4 👣: Benefit is actually Net Benefit
+
+.pull-left[
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+
+conf_mat_reactable <- function(conf_mat) {
+  conf_mat %>% 
+  reactable::reactable(
+    style = list(fontSize = "14px"),
+    sortable = FALSE,
+            fullWidth = FALSE,
+            borderless = FALSE,
+            defaultColDef = reactable::colDef(
+              align = "center"
+            ),
+            columns = list(
+              type = reactable::colDef(
+                name = "",
+                align = "left"
+              ),
+              predicted_positive = reactable::colDef(
+                name = "Predicted Positive"
+            ),
+            predicted_negative = reactable::colDef(
+              name = "Predicted Negative"
+            )
+            )
+  )
+}
+
+
+library(magrittr)
+library(reactable)
+
+tibble::tribble(
+  ~"type", ~"predicted_positive", ~"predicted_negative",
+  "Real Positive", "2", "",
+  "Real Negative", "0", ""
+) %>% 
+  conf_mat_reactable()
+```
+
+
+.reg[
+💊💊 
+<br> 
+🤢🤢😷😷😷😷😷😷😷😷
+]
+
+]
+
+.pull-right[
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+tibble::tribble(
+  ~"type", ~"predicted_positive", ~"predicted_negative",
+  "Real Positive", "3", "",
+  "Real Negative", "4", ""
+) %>% 
+  conf_mat_reactable()
+```
+
+.reg[
+💊💊💊💊💊💊💊 
+<br>
+🤢🤢🤢🤨🤨🤨🤨😷😷😷
+]
+
+
+
+]
+
+<br>
+<br>
+<br>
+<br>
+
+$$\begin{equation*}
+\begin{aligned}[t]
+\small{\text{Net Benefit}} &= \small{\frac{\text{TP}}{\text{N}} - \frac{\text{FP}}{\text{N}} * {\frac{{p_{t}}}{{1 - p_{t}}}}}
+\end{aligned}
+\qquad% adjust to suit
+\begin{aligned}[t]
+\small{\text{Net Benefit}} &= \small{\frac{\text{TP}}{\text{N}} - \frac{\text{FP}}{\text{N}} * {\frac{{p_{t}}}{{1 - p_{t}}}}}
+\end{aligned}
+\end{equation*}$$
+
+
+
+
+---
+### Step 4 👣: Benefit is actually Net Benefit
+
+.pull-left[
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+
+conf_mat_reactable <- function(conf_mat) {
+  conf_mat %>% 
+  reactable::reactable(
+    style = list(fontSize = "14px"),
+    sortable = FALSE,
+            fullWidth = FALSE,
+            borderless = FALSE,
+            defaultColDef = reactable::colDef(
+              align = "center"
+            ),
+            columns = list(
+              type = reactable::colDef(
+                name = "",
+                align = "left"
+              ),
+              predicted_positive = reactable::colDef(
+                name = "Predicted Positive"
+            ),
+            predicted_negative = reactable::colDef(
+              name = "Predicted Negative"
+            )
+            )
+  )
+}
+
+
+library(magrittr)
+library(reactable)
+
+tibble::tribble(
+  ~"type", ~"predicted_positive", ~"predicted_negative",
+  "Real Positive", "2", "",
+  "Real Negative", "0", ""
+) %>% 
+  conf_mat_reactable()
+```
+
+
+.reg[
+💊💊 
+<br> 
+🤢🤢😷😷😷😷😷😷😷😷
+]
+
+]
+
+.pull-right[
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+tibble::tribble(
+  ~"type", ~"predicted_positive", ~"predicted_negative",
+  "Real Positive", "3", "",
+  "Real Negative", "4", ""
+) %>% 
+  conf_mat_reactable()
+```
+
+.reg[
+💊💊💊💊💊💊💊 
+<br>
+🤢🤢🤢🤨🤨🤨🤨😷😷😷
+]
+
+
+
+]
+
+<br>
+<br>
+<br>
+<br>
+
+$$\begin{equation*}
+\begin{aligned}[t]
+\small{\text{Net Benefit}} &= \small{\frac{\text{TP}}{\text{10}} - \frac{\text{FP}}{\text{10}} * {\frac{1}{4}}}
+\end{aligned}
+\qquad% adjust to suit
+\begin{aligned}[t]
+\small{\text{Net Benefit}} &= \small{\frac{\text{TP}}{\text{10}} - \frac{\text{FP}}{\text{10}} * {\frac{1}{4}}}
+\end{aligned}
+\end{equation*}$$
+
+
+
+---
+### Step 4 👣: Benefit is actually Net Benefit
+
+.pull-left[
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+
+conf_mat_reactable_tp <- function(conf_mat) {
+  conf_mat %>% 
+  reactable::reactable(
+    style = list(fontSize = "14px"),
+    sortable = FALSE,
+            fullWidth = FALSE,
+            borderless = FALSE,
+            defaultColDef = reactable::colDef(
+              align = "center"
+            ),
+            columns = list(
+              type = reactable::colDef(
+                name = "",
+                align = "left"
+              ),
+              predicted_positive = reactable::colDef(
+                name = "Predicted Positive",
+                style = function(value) {
+                  color <- if (value %in% c("2", "3")) {
+                    "lightgreen"
+                    
+                  
+                  }
+                  list(fontWeight = 600, background = color)
+                  
+                }
+            ),
+            predicted_negative = reactable::colDef(
+              name = "Predicted Negative"
+            )
+            )
+  )
+}
+
+
+library(magrittr)
+library(reactable)
+
+tibble::tribble(
+  ~"type", ~"predicted_positive", ~"predicted_negative",
+  "Real Positive", "2", "",
+  "Real Negative", "0", ""
+) %>% 
+  conf_mat_reactable_tp()
+```
+
+.reg[
+💊💊
+<br> 
+🤢🤢]
+
+.opac[😷😷😷😷😷😷😷😷
+]
+
+]
+
+.pull-right[
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+tibble::tribble(
+  ~"type", ~"predicted_positive", ~"predicted_negative",
+  "Real Positive", "3", "",
+  "Real Negative", "4", ""
+) %>% 
+  conf_mat_reactable_tp()
+```
+
+.reg[
+💊💊💊
+<br>
+🤢🤢🤢
+].opac[
+💊💊💊💊 
+<br>
+🤨🤨🤨🤨😷😷😷
+]
+
+]
+
+
+$$\begin{equation*}
+\begin{aligned}[t]
+\small{\text{Net Benefit}} &= \small{\frac{\green{\bf{2}}}{\text{10}} - \frac{\text{FP}}{\text{10}} * {\frac{1}{4}}}
+\end{aligned}
+\qquad% adjust to suit
+\begin{aligned}[t]
+\small{\text{Net Benefit}} &= \small{\frac{\green{\bf{3}}}{\text{10}} - \frac{\text{FP}}{\text{10}} * {\frac{1}{4}}}
+\end{aligned}
+\end{equation*}$$
+
+---
+### Step 4 👣: Benefit is actually Net Benefit
+
+.pull-left[
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+
+conf_mat_reactable_fp <- function(conf_mat) {
+  conf_mat %>% 
+  reactable::reactable(
+    style = list(fontSize = "14px"),
+    sortable = FALSE,
+            fullWidth = FALSE,
+            borderless = FALSE,
+            defaultColDef = reactable::colDef(
+              align = "center"
+            ),
+            columns = list(
+              type = reactable::colDef(
+                name = "",
+                align = "left"
+              ),
+              predicted_positive = reactable::colDef(
+                name = "Predicted Positive",
+                style = function(value) {
+                  color <- if (value %in% c("4", "0", "7")) {
+                    "pink"
+                  
+                  }
+                  
+                  list(fontWeight = 600, background = color)
+                  
+                }
+            ),
+            predicted_negative = reactable::colDef(
+              name = "Predicted Negative"
+            )
+            )
+  )
+}
+
+
+library(magrittr)
+library(reactable)
+
+tibble::tribble(
+  ~"type", ~"predicted_positive", ~"predicted_negative",
+  "Real Positive", "2", "",
+  "Real Negative", "0", ""
+) %>% 
+  conf_mat_reactable_fp()
+```
+
+.opac[
+💊💊 
+<br> 
+🤢🤢😷😷😷😷😷😷😷😷
+]
+
+]
+
+.pull-right[
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+tibble::tribble(
+  ~"type", ~"predicted_positive", ~"predicted_negative",
+  "Real Positive", "3", "",
+  "Real Negative", "4", ""
+) %>% 
+  conf_mat_reactable_fp()
+```
+
+.opac[
+💊💊💊
+<br>
+🤢🤢🤢
+].reg[
+💊💊💊💊 
+<br>
+🤨🤨🤨🤨
+].opac[
+💊💊💊
+<br>
+😷😷😷
+]
+
+]
+
+$$\begin{equation*}
+\begin{aligned}[t]
+\small{\text{Net Benefit}} &= \small{\frac{\text{2}}{\text{10}} - \frac{\red{\bf{0}}}{\text{10}} * {\frac{1}{4}}}
+\end{aligned}
+\qquad% adjust to suit
+\begin{aligned}[t]
+\small{\text{Net Benefit}} &= \small{\frac{\text{3}}{\text{10}} - \frac{\red{\bf{4}}}{\text{10}} * {\frac{1}{4}}}
+\end{aligned}
+\end{equation*}$$
+
+---
+
+### Step 4 👣: Benefit is actually Net Benefit
+
+.pull-left[
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+
+tibble::tribble(
+  ~"type", ~"predicted_positive", ~"predicted_negative",
+  "Real Positive", "2", "",
+  "Real Negative", "0", ""
+) %>% 
+  conf_mat_reactable()
+```
+
+.reg[
+💊💊 
+<br> 
+🤢🤢😷😷😷😷😷😷😷😷
+]
+
+]
+
+.pull-right[
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+tibble::tribble(
+  ~"type", ~"predicted_positive", ~"predicted_negative",
+  "Real Positive", "3", "",
+  "Real Negative", "4", ""
+) %>% 
+  conf_mat_reactable()
+```
+
+.reg[
+💊💊💊💊💊💊💊 
+<br>
+🤢🤢🤢🤨🤨🤨🤨😷😷😷
+]
+
+]
+
+$$\begin{equation*}
+\begin{aligned}[t]
+\small{\text{Net Benefit}} &= \small{\frac{\text{2}}{\text{10}} - \frac{\text{0}}{\text{10}} * {\frac{1}{4}} = \frac{\text{2}}{\text{10}}}
+\end{aligned}
+\qquad% adjust to suit
+\begin{aligned}[t]
+\small{\text{Net Benefit}} &= \small{\frac{\text{3}}{\text{10}} - \frac{\text{4}}{\text{10}} * {\frac{1}{4}} = \frac{\text{2}}{\text{10}}}
+\end{aligned}
+\end{equation*}$$
+
+---
+class: inverse center middle
+
+# Step 5 👣: 
+# Net benefit can also be expressed as Interventions Avoided
+---
+### Step 5 👣: Net benefit can also be expressed as Interventions Avoided
+
+.pull-left[
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+
+conf_mat_reactable <- function(conf_mat) {
+  conf_mat %>% 
+  reactable::reactable(
+    style = list(fontSize = "14px"),
+    sortable = FALSE,
+            fullWidth = FALSE,
+            borderless = FALSE,
+            defaultColDef = reactable::colDef(
+              align = "center"
+            ),
+            columns = list(
+              type = reactable::colDef(
+                name = "",
+                align = "left"
+              ),
+              predicted_positive = reactable::colDef(
+                name = "Predicted Positive"
+            ),
+            predicted_negative = reactable::colDef(
+              name = "Predicted Negative"
+            )
+            )
+  )
+}
+
+
+library(magrittr)
+library(reactable)
+
+tibble::tribble(
+  ~"type", ~"predicted_positive", ~"predicted_negative",
+  "Real Positive", "3", "",
+  "Real Negative", "4", ""
+) %>% 
+  conf_mat_reactable()
+```
+
+
+.reg[
+💊💊💊💊💊💊💊 
+<br>
+🤢🤢🤢🤨🤨🤨🤨😷😷😷
+]
+
+
+]
+
+.pull-right[
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+tibble::tribble(
+  ~"type", ~"predicted_positive", ~"predicted_negative",
+  "Real Positive", "3", "",
+  "Real Negative", "7", ""
+) %>% 
+  conf_mat_reactable()
+```
+
+.reg[
+💊💊💊💊💊💊💊💊💊💊 
+<br>
+🤢🤢🤢🤨🤨🤨🤨🤨🤨🤨
+]
+
+
+
+]
+
+<br>
+<br>
+<br>
+<br>
+
+$$\begin{equation*}
+\begin{aligned}[t]
+\small{\text{Net Benefit}} &= \small{\frac{\text{TP}}{\text{N}} - \frac{\text{FP}}{\text{N}} * {\frac{{p_{t}}}{{1 - p_{t}}}}}
+\end{aligned}
+\qquad% adjust to suit
+\begin{aligned}[t]
+\small{\text{Net Benefit All}} &= \small{\frac{\text{TP}}{\text{N}} - \frac{\text{FP}}{\text{N}} * {\frac{{p_{t}}}{{1 - p_{t}}}}}
+\end{aligned}
+\end{equation*}$$
+
+
+
+
+---
+### Step 5 👣: Net benefit can also be expressed as Interventions Avoided
+
+
+.pull-left[
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+
+conf_mat_reactable <- function(conf_mat) {
+  conf_mat %>% 
+  reactable::reactable(
+    style = list(fontSize = "14px"),
+    sortable = FALSE,
+            fullWidth = FALSE,
+            borderless = FALSE,
+            defaultColDef = reactable::colDef(
+              align = "center"
+            ),
+            columns = list(
+              type = reactable::colDef(
+                name = "",
+                align = "left"
+              ),
+              predicted_positive = reactable::colDef(
+                name = "Predicted Positive"
+            ),
+            predicted_negative = reactable::colDef(
+              name = "Predicted Negative"
+            )
+            )
+  )
+}
+
+
+library(magrittr)
+library(reactable)
+
+tibble::tribble(
+  ~"type", ~"predicted_positive", ~"predicted_negative",
+  "Real Positive", "3", "",
+  "Real Negative", "4", ""
+) %>% 
+  conf_mat_reactable()
+```
+
+
+.reg[
+💊💊💊💊💊💊💊 
+<br>
+🤢🤢🤢🤨🤨🤨🤨😷😷😷
+]
+
+
+]
+
+.pull-right[
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+tibble::tribble(
+  ~"type", ~"predicted_positive", ~"predicted_negative",
+  "Real Positive", "3", "",
+  "Real Negative", "7", ""
+) %>% 
+  conf_mat_reactable()
+```
+
+.reg[
+💊💊💊💊💊💊💊💊💊💊 
+<br>
+🤢🤢🤢🤨🤨🤨🤨🤨🤨🤨
+]
+
+
+]
+
+<br>
+<br>
+<br>
+<br>
+
+$$\begin{equation*}
+\begin{aligned}[t]
+\small{\text{Net Benefit}} &= \small{\frac{\text{TP}}{\text{10}} - \frac{\text{FP}}{\text{10}} * {\frac{1}{4}}}
+\end{aligned}
+\qquad% adjust to suit
+\begin{aligned}[t]
+\small{\text{Net Benefit All}} &= \small{\frac{\text{TP}}{\text{10}} - \frac{\text{FP}}{\text{10}} * {\frac{1}{4}}}
+\end{aligned}
+\end{equation*}$$
+
+
+
+---
+### Step 5 👣: Net benefit can also be expressed as Interventions Avoided
+
+.pull-left[
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+tibble::tribble(
+  ~"type", ~"predicted_positive", ~"predicted_negative",
+  "Real Positive", "3", "",
+  "Real Negative", "4", ""
+) %>% 
+  conf_mat_reactable_tp()
+```
+
+.reg[
+💊💊💊
+<br>
+🤢🤢🤢
+].opac[
+💊💊💊💊 
+<br>
+🤨🤨🤨🤨😷😷😷
+]
+
+]
+
+.pull-right[
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+tibble::tribble(
+  ~"type", ~"predicted_positive", ~"predicted_negative",
+  "Real Positive", "3", "",
+  "Real Negative", "7", ""
+) %>% 
+  conf_mat_reactable_tp()
+```
+
+.reg[
+💊💊💊
+<br>
+🤢🤢🤢
+].opac[
+💊💊💊💊💊💊💊 
+<br>
+🤨🤨🤨🤨🤨🤨🤨
+]
+
+]
+
+
+$$\begin{equation*}
+\begin{aligned}[t]
+\small{\text{Net Benefit}} &= \small{\frac{\green{\bf{3}}}{\text{10}} - \frac{\text{FP}}{\text{10}} * {\frac{1}{4}}}
+\end{aligned}
+\qquad% adjust to suit
+\begin{aligned}[t]
+\small{\text{Net Benefit All}} &= \small{\frac{\green{\bf{3}}}{\text{10}} - \frac{\text{FP}}{\text{10}} * {\frac{1}{4}}}
+\end{aligned}
+\end{equation*}$$
+
+---
+### Step 5 👣: Net benefit can also be expressed as Interventions Avoided
+
+.pull-left[
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+tibble::tribble(
+  ~"type", ~"predicted_positive", ~"predicted_negative",
+  "Real Positive", "3", "",
+  "Real Negative", "4", ""
+) %>% 
+  conf_mat_reactable_fp()
+```
+
+.opac[
+💊💊💊
+<br>
+🤢🤢🤢
+].reg[
+💊💊💊💊 
+<br>
+🤨🤨🤨🤨
+].opac[
+💊💊💊
+<br>
+😷😷😷
+]
+
+]
+
+.pull-right[
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+tibble::tribble(
+  ~"type", ~"predicted_positive", ~"predicted_negative",
+  "Real Positive", "3", "",
+  "Real Negative", "7", ""
+) %>% 
+  conf_mat_reactable_fp()
+```
+
+.opac[
+💊💊💊
+<br>
+🤢🤢🤢
+].reg[
+💊💊💊💊💊💊💊 
+<br>
+🤨🤨🤨🤨🤨🤨🤨
+]
+
+]
+
+$$\begin{equation*}
+\begin{aligned}[t]
+\small{\text{Net Benefit}} &= \small{\frac{\text{3}}{\text{10}} - \frac{\red{\bf{4}}}{\text{10}} * {\frac{1}{4}}}
+\end{aligned}
+\qquad% adjust to suit
+\begin{aligned}[t]
+\small{\text{Net Benefit All}} &= \small{\frac{\text{3}}{\text{10}} - \frac{\red{\bf{7}}}{\text{10}} * {\frac{1}{4}}}
+\end{aligned}
+\end{equation*}$$
+---
+### Step 5 👣: Net benefit can also be expressed as Interventions Avoided
+
+.pull-left[
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+tibble::tribble(
+  ~"type", ~"predicted_positive", ~"predicted_negative",
+  "Real Positive", "3", "",
+  "Real Negative", "4", ""
+) %>% 
+  conf_mat_reactable()
+```
+
+.opac[
+💊💊💊💊💊💊💊
+<br>
+🤢🤢🤢🤨🤨🤨🤨
+].reg[
+<br>
+😷😷😷
+]
+
+]
+
+.pull-right[
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+tibble::tribble(
+  ~"type", ~"predicted_positive", ~"predicted_negative",
+  "Real Positive", "3", "",
+  "Real Negative", "7", ""
+) %>% 
+  conf_mat_reactable()
+```
+
+.opac[
+💊💊💊💊💊💊💊💊💊💊  
+<br>
+🤢🤢🤢🤨🤨🤨🤨🤨🤨🤨
+]
+
+]
+
+$$\begin{equation*}
+\begin{aligned}[t]
+\small{\text{Net Benefit}} &= \small{\frac{\text{3}}{\text{10}} - \frac{\text{4}}{\text{10}} * {\frac{1}{4}}}
+\end{aligned}
+\qquad% adjust to suit
+\begin{aligned}[t]
+\small{\text{Net Benefit All}} &= \small{\frac{\text{3}}{\text{10}} - \frac{\text{7}}{\text{10}} * {\frac{1}{4}}}
+\end{aligned}
+\end{equation*}$$
+
+$$\text{Interventions Avoided (per 100 cases)} = \frac{3}{10} * 100 = 30$$
+
+
+---
+### Step 5 👣: Net benefit can also be expressed as Interventions Avoided
+
+.pull-left[
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+tibble::tribble(
+  ~"type", ~"predicted_positive", ~"predicted_negative",
+  "Real Positive", "3", "",
+  "Real Negative", "4", ""
+) %>% 
+  conf_mat_reactable()
+```
+
+.opac[
+💊💊💊💊💊💊💊
+<br>
+🤢🤢🤢🤨🤨🤨🤨
+].reg[
+<br>
+😷😷😷
+]
+
+]
+
+.pull-right[
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+tibble::tribble(
+  ~"type", ~"predicted_positive", ~"predicted_negative",
+  "Real Positive", "3", "",
+  "Real Negative", "7", ""
+) %>% 
+  conf_mat_reactable()
+```
+
+.opac[
+💊💊💊💊💊💊💊💊💊💊  
+<br>
+🤢🤢🤢🤨🤨🤨🤨🤨🤨🤨
+]
+
+]
+
+$$\begin{equation*}
+\begin{aligned}[t]
+\small{\text{Net Benefit}} &= \small{\frac{\text{3}}{\text{10}} - \frac{\text{4}}{\text{10}} * {\frac{1}{4}}}
+\end{aligned}
+\qquad% adjust to suit
+\begin{aligned}[t]
+\small{\text{Net Benefit All}} &= \small{\frac{\text{3}}{\text{10}} - \frac{\text{7}}{\text{10}} * {\frac{1}{4}}}
+\end{aligned}
+\end{equation*}$$
+
+$$\text{(Net Benefit - Net Benefit All)} * \frac{1-p_t}{p_t} = \frac{3}{10} * \frac{1}{4} * 4 * 100 = 30$$
+
+$$\text{Interventions Avoided (per 100 cases)} = \frac{3}{10} * 100 = 30$$
+
+---
+### Step 5 👣: Net benefit can also be expressed as Interventions Avoided
+
+.pull-left[
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+tibble::tribble(
+  ~"type", ~"predicted_positive", ~"predicted_negative",
+  "Real Positive", "3", "0",
+  "Real Negative", "4", "3"
+) %>% 
+  conf_mat_reactable()
+```
+
+.opac[
+💊💊💊💊💊💊💊
+<br>
+🤢🤢🤢🤨🤨🤨🤨
+].reg[
+<br>
+🤨🤨🤨
+]
+
+]
+
+.pull-right[
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+tibble::tribble(
+  ~"type", ~"predicted_positive", ~"predicted_negative",
+  "Real Positive", "3", "0",
+  "Real Negative", "7", "0"
+) %>% 
+  conf_mat_reactable()
+```
+
+.opac[
+💊💊💊💊💊💊💊💊💊💊  
+<br>
+🤢🤢🤢🤨🤨🤨🤨🤨🤨🤨
+]
+
+]
+
+$$\text{Interventions Avoided (per 100 cases)} = \frac{3}{10} * 100 = 30$$
+
+$$\text{Interventions Avoided (per 100 cases)} = (\frac{\text{TN}}{\text{N}} -\frac{\text{FN}}{\text{N}} * \frac{1 - p_t}{p_t}) * 100 = (\frac{\text{3}}{\text{10}} -\frac{\text{0}}{\text{10}} * 4) * 100 = 30$$
+---
+### Step 5 👣: Net benefit can also be expressed as Interventions Avoided
+
+.pull-left[
+
+For the y axis instead of conventional Net Benefit you can use Interventions avoided.
+
+
+]
+
+.pull-right[
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+library(MASS)
+data.set <- birthwt
+model = glm(low ~ age + lwt, family=binomial(link="logit"), data=data.set)
+model2 = glm(low ~ age, family=binomial(link="logit"), data=data.set)
+
+data.set$predlow = predict(model, type="response")
+data.set$predage = predict(model2, type="response")
+
+
+performance_data_dc <- rtichoke:::prepare_performance_data(
+  probs = list("low" = data.set$predlow,
+               "age" = data.set$predage),
+  reals = list(data.set$low)
+)
+
+
+performance_data1 <- performance_data_dc %>%
+  rtichoke:::add_hover_text_to_performance_data("several models", 
+                                     curve = "decision") %>% 
+  dplyr::filter(threshold > 0 & threshold < 1)
+
+
+performance_data2 <- performance_data_dc  %>% 
+  dplyr::mutate(
+    N = TP +TN  + FP + FN,
+    prevalence = (TP + FN) / N,
+    NB_intervention_all =   prevalence - (1- prevalence) * 
+      (threshold) / (1 - threshold),
+    NB_treatment_avoided = 100 * (NB - NB_intervention_all) * 
+      ( (1 - threshold) / threshold )
+  ) %>% 
+  rtichoke:::add_hover_text_to_performance_data("several models", 
+                                     curve = "interventions avoided")%>% 
+  dplyr::filter(threshold > 0 & threshold < 1)
+
+conventional <- plotly::plot_ly(
+    height = 500,
+    width = 500
+  )  %>%
+  plotly::add_lines(
+    data = rtichoke:::create_reference_lines_data_frame(
+  "decision",
+  plotly = TRUE,
+  0.312,
+  performance_data = performance_data1
+),
+    x = ~x, 
+    y = ~y,
+    color = I("grey"),
+    line = list(width = 1.75),
+    linetype = ~population,
+    hoverinfo = "text",
+    text =~ text
+  )  %>%
+  plotly::add_trace(
+    data = performance_data1,
+    x =~ threshold,
+    y =~ NB,
+    type = "scatter",
+    mode = "markers+lines",
+    color = ~model,
+    # colors =  c("#5BC0BE","#FC8D62"),
+    hoverinfo = "text",
+    text =~ text
+  ) %>%
+  rtichoke:::set_styling_for_rtichoke(
+    "decision", 
+    max_y_range = max(performance_data1$NB,
+                      na.rm = TRUE) + 0.1,
+    min_y_range = min(performance_data1$NB[performance_data1$NB != -Inf],
+                      na.rm = TRUE) - 0.1) %>%
+  plotly::add_markers(
+    data = performance_data1,
+    x =~ threshold,
+    y =~ NB,
+    color =~ model,
+    # colors =  c("#5BC0BE","#FC8D62"),
+    frame =~ threshold,
+    hoverinfo = "text",
+    text =~ text,
+    size = 20, 
+    marker = list(size = 12, 
+                  line = list(
+                    width = 3, 
+                    color = I("black"))) 
+)
+
+
+interventions_avoided <- rtichoke:::create_reference_lines_data_frame(
+  "decision",
+  plotly = TRUE,
+  0.312,
+  performance_data = performance_data1
+) %>%
+  plotly::plot_ly(
+    x = ~x, 
+    y = ~y,
+    height = 500,
+    width = 500
+  )  %>%
+  plotly::add_trace(
+    data = performance_data2,
+    x =~ threshold,
+    y =~ NB_treatment_avoided,
+    type = "scatter",
+    mode = "markers+lines",
+    color = ~model,
+    # colors =  c("#5BC0BE","#FC8D62"),
+    hoverinfo = "text",
+    text =~ text
+  ) %>%
+  rtichoke:::set_styling_for_rtichoke(
+    "interventions avoided") %>%
+  plotly::add_markers(
+    data = performance_data2,
+    x =~ threshold,
+    y =~ NB_treatment_avoided,
+    color =~ model,
+    # colors =  c("#5BC0BE","#FC8D62"),
+    hoverinfo = "text",
+    text =~ text,
+    frame =~ threshold,
+    size = 20, 
+    marker = list(size = 12, 
+                  line = list(
+                    width = 3, 
+                    color = I("black"))) 
+  )
+
+
+a <- list(
+  text = "Interventions Avoided",
+  font = list(
+    # family = "Courier New, monospace",
+    size = 18,
+    color = "black"),
+  xref = "paper",
+  yref = "paper",
+  yanchor = "bottom",
+  xanchor = "center",
+  align = "center",
+  x = 0.5,
+  y = 1,
+  showarrow = FALSE
+)
+
+b <- list(
+  text = "Net Benefit",
+  font = list(
+    # family = "Courier New, monospace",
+    size = 18,
+    color = "black"),
+  xref = "paper",
+  yref = "paper",
+  yanchor = "bottom",
+  xanchor = "center",
+  align = "center",
+  x = 0.5,
+  y = 1,
+  showarrow = FALSE
+)
+
+
+interventions_avoided
+
+```
+
+]
+
+
+---
+### Step 5 👣: Net benefit can also be expressed as Interventions Avoided
+
+.pull-left[
+
+For the y axis instead of conventional Net Benefit you can use Interventions avoided.
+
+
+Doing so does not
+change any conclusions as to which model or test has
+the highest net benefit.
+
+]
+
+.pull-right[
+
+```{r echo=FALSE}
+
+ plotly::subplot(
+    interventions_avoided %>%
+      plotly::layout(annotations = a),
+    conventional %>%
+      plotly::layout(annotations = b), 
+    nrows = 2,
+    shareX = TRUE,
+    shareY = FALSE, heights = c(0.5, 0.5)
+  )
+
+```
+
+
+]
+
+---
+class: inverse center middle
+
+# Thank You 
+# 👋
+
+---
