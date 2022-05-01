@@ -76,8 +76,6 @@ xaringanExtra::use_tile_view()
 
 - How to interpret a Decision Curve: Step by Step guide.
 
-- Some common questions about interpreting decision curves.
-
 ---
 class: inverse center middle
 
@@ -112,7 +110,7 @@ These metrics are not directly informative to clinical value, nor to full decisi
 - On the Y axis: 
 
 $$\begin{aligned}
-\small{
+\scriptsize{
 \text{Net Benefit} = \frac{\text{TP}}{\text{TP + FP + TN + FN}} - \frac{\text{FP}}{\text{TP + FP + TN + FN}} * {\frac{{p_{t}}}{{1 - p_{t}}}}}
 \end{aligned}$$
 
@@ -126,7 +124,7 @@ $$\begin{aligned}
 - Treat All strategy as a reference line:
 
 $$\begin{aligned}
-\small{
+\scriptsize{
 \text{Net Benefit Treat All} = {\text{Prevalence}} -  {\text{(1 - Prevalence)}} *{\frac{{p_{t}}}{{1 - p_{t}}}}}
 \end{aligned}$$
 
@@ -982,8 +980,10 @@ class: inverse center middle
 
 .red[REMEMBER]: almost always (specially in Health Care) -
 
-$$\text{TP} \neq \text{FP}$$
-A good example for bad practice in evaluating performance of prediction model is the Youden's J statistics:
+Sensitivity does not have the same importance as Specificity and having 1 TP does not have the same clinical utility as having 1 FP.
+
+A good example for a bad practice in evaluating performance of prediction model is the Youden's J statistics:
+
 $${\displaystyle J={\frac {\text{TP}}{{\text{TP}}+{\text{FN}}}}+{\frac {\text{TN}}{{\text{TN}}+{\text{FP}}}}-1}$$
 Maximizing Youden's J statistic might lead to a Probability Threshold that will do more harm than good, even if the prediction model is accurate!
 
@@ -1207,7 +1207,7 @@ background-size: contain
 
 Let's think in terms of money 💸
 
-A wine importer buys €1m of wine from France and sells it in the USA for $1.5 🍷
+A wine importer buys €1m of wine from France and sells it in the USA for $1.5m 🍷
 
 --
 
