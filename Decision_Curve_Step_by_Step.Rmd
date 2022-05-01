@@ -50,6 +50,11 @@ style_duo_accent(
 xaringanExtra::use_scribble()
 ```
 
+```{r xaringan-tile-view, echo=FALSE}
+xaringanExtra::use_tile_view()
+```
+
+
 <style>
 
 .reg{
@@ -2354,4 +2359,3 @@ class: inverse center middle
 # Thank You 
 # 👋
 
----
