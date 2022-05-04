@@ -3,7 +3,7 @@ title: "Decision Curve"
 subtitle: "Step by Step 👣"  
 author: 
   - "Uriah Finkel"
-date: '`r Sys.Date()`'
+date: '2022-05-01'
 output:
   xaringan::moon_reader:
     css: xaringan-themer.css
