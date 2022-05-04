@@ -83,6 +83,132 @@ class: inverse center middle
 
 ---
 
+```{r xaringan-panelset, echo=FALSE}
+
+library(xaringanExtra)
+xaringanExtra::use_panelset()
+```
+
+class: center middle
+
+#### Which Model is Better? 🤔
+#### Select patients for biopsy amongst men with elevated PSA
+
+.left-column[
+
+## ROC 
+
+]
+
+.right-column[
+```{r echo=FALSE}
+library(rtichoke)
+scenario1 <- read.csv("Decision_Curve_Step_by_Step_files/scenario1.csv")
+
+library(magrittr)
+library(rtichoke)
+
+create_roc_curve(
+  probs = list(
+    "First Model" = scenario1$modela,
+    "Second Model" = scenario1$modelb
+  ),
+  reals = list(scenario1$event),
+  size = 500
+) %>%
+  plotly::animation_slider(
+    currentvalue = list(prefix = "Probability Threshold: ",
+                        font = list(color="black"),
+                        xanchor = "left")
+  )
+
+```
+
+]
+
+---
+class: center middle
+
+#### Which Model is Better? 🤔
+#### Select patients for biopsy amongst men with elevated PSA
+
+.left-column[
+
+## ROC 
+
+## Calibration Curve 
+
+]
+
+.right-column[
+
+```{r echo=FALSE}
+
+create_calibration_curve(
+  probs = list(
+    "First Model" = scenario1$modela,
+    "Second Model" = scenario1$modelb
+  ),
+  reals = list(scenario1$event),
+  type = "smooth",
+  histogram_included = FALSE, size = 500
+)
+
+```
+
+]
+
+---
+class: center middle
+
+#### Which Model is Better? 🤔
+#### Select patients for biopsy amongst men with elevated PSA
+
+.left-column[
+
+## ROC 
+
+## Calibration Curve 
+
+## Decision Curve
+
+]
+
+.right-column[
+
+```{r echo=FALSE}
+
+prepare_performance_data(
+   probs = list(
+    "First Model" = scenario1$modela,
+    "Second Model" = scenario1$modelb
+  ),
+  reals = list(scenario1$event)
+) %>% 
+  dplyr::filter(threshold <= 0.2) %>% 
+  plot_decision_curve(
+  size = 500
+) %>%
+  plotly::animation_slider(
+    currentvalue = list(prefix = "Probability Threshold: ",
+                        font = list(color="black"),
+                        xanchor = "left")
+  ) %>% 
+  plotly::layout(
+    xaxis = list(
+      range = list(-0.01, 0.205)
+    ),
+    yaxis = list(
+      range = list(-0.01, 0.25)
+    )
+  )
+  
+```
+
+]
+
+---
+
 ### Traditional Statistical Metric:
 
 - Discrimination: How well a prediction model can discriminate those with the outcome from those without the outcome. Examples: ROC Curve, AUROC, Sensitivity, Specificity, NPV, PPV, Lift and more...
