@@ -68,6 +68,18 @@ xaringanExtra::use_tile_view()
 
 </style>
 
+
+
+# Acknowledgement:
+
+
+I'd like to thank Dr. Andrew Vickers for his help with this presentation.
+
+
+You can visit his page on [mskcc.org/profile/andrew-vickers](https://www.mskcc.org/profile/andrew-vickers).
+
+---
+
 # Agenda
 
 - This lecture follows the article **[A simple, step-by-step  guide to interpreting decision curve analysis](https://diagnprognres.biomedcentral.com/articles/10.1186/s41512-019-0064-7)**.
