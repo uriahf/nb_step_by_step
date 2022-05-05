@@ -68,13 +68,33 @@ xaringanExtra::use_tile_view()
 
 </style>
 
+
+
+# Acknowledgement:
+
+
+I'd like to thank Dr. Andrew Vickers for his help with this presentation.
+
+
+You can visit his page on [mskcc.org/profile/andrew-vickers](https://www.mskcc.org/profile/andrew-vickers).
+
+---
+
 # Agenda
 
-- This lecture follows the article 'A simple, step-by-step  guide to interpreting decision curve analysis'.
+- This lecture follows the article **[A simple, step-by-step  guide to interpreting decision curve analysis](https://diagnprognres.biomedcentral.com/articles/10.1186/s41512-019-0064-7)**.
 
 - Introduction: Motivation behind Decision Curve Analysis and how to draw a Decision Curve.
 
 - How to interpret a Decision Curve: Step by Step guide.
+
+# Code for Decision Curve Analysis 💻
+
+- Standard software is available to run decision curves in R, SAS and Stata on **[decisioncurveanalysis.org](www.decisioncurveanalysis.org)**. Python should be with us soon! 
+
+- All interactive plots in this presentation were created with **[rtichoke](https://uriahf.github.io/rtichoke/)** R package (I am the author 👋).
+
+- For ggplot2 outputs **[dcurves](https://www.danieldsjoberg.com/dcurves)** R package is available on CRAN.   
 
 ---
 class: inverse center middle
@@ -262,16 +282,9 @@ $$\begin{aligned}
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 
-
-library(MASS) 
-data.set <- birthwt 
-model = glm(low ~ age + lwt, family=binomial(link="logit"), data=data.set) 
-data.set$predlow = predict(model, type="response") 
-library(magrittr)
-
 dc <- rtichoke::create_decision_curve(
-  probs = list(data.set$predlow),
-  reals = list(data.set$low),
+  probs = list(scenario1$modela),
+  reals = list(scenario1$event),
   interactive = TRUE, size = 500
 ) %>% 
   plotly::animation_slider(
@@ -1118,9 +1131,10 @@ Maximizing Youden's J statistic might lead to a Probability Threshold that will 
 .pull-right[
 ```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
 perf_dat <- rtichoke::prepare_performance_data(
-  probs = list(data.set$predlow),
-  reals = list(data.set$low)
+  probs = list(scenario1$modela),
+  reals = list(scenario1$event)
 ) 
+
 
 j_idx <- perf_dat %>% 
   dplyr::mutate(j_idx = sensitivity + specificity - 1) %>% 
@@ -1177,8 +1191,8 @@ $$\frac{p_t}{1 - p_t} = \frac{0.2}{1 - 0.2} = \frac{1}{4}$$
 
 
 dc_performance_data <- rtichoke::prepare_performance_data(
-  probs = list(data.set$predlow),
-  reals = list(data.set$low)
+  probs = list(scenario1$modela),
+  reals = list(scenario1$event)
 ) %>% 
   rtichoke:::add_hover_text_to_performance_data("one model", 
                                      curve = "decision") %>% 
@@ -2276,21 +2290,26 @@ For the y axis instead of conventional Net Benefit you can use Interventions avo
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 
-library(MASS)
-data.set <- birthwt
-model = glm(low ~ age + lwt, family=binomial(link="logit"), data=data.set)
-model2 = glm(low ~ age, family=binomial(link="logit"), data=data.set)
-
-data.set$predlow = predict(model, type="response")
-data.set$predage = predict(model2, type="response")
+# library(MASS)
+# data.set <- birthwt
+# model = glm(low ~ age + lwt, family=binomial(link="logit"), data=data.set)
+# model2 = glm(low ~ age, family=binomial(link="logit"), data=data.set)
+# 
+# data.set$predlow = predict(model, type="response")
+# data.set$predage = predict(model2, type="response")
 
 
 performance_data_dc <- rtichoke:::prepare_performance_data(
-  probs = list("low" = data.set$predlow,
-               "age" = data.set$predage),
-  reals = list(data.set$low)
+  probs = list(
+    "First Model" = scenario1$modela,
+    "Second Model" = scenario1$modelb
+  ),
+  reals = list(scenario1$event)
 )
 
+prevalence_for_nb_reference_line <- rtichoke:::get_prevalence_from_performance_data(
+    performance_data_dc) %>% 
+  unique()
 
 performance_data1 <- performance_data_dc %>%
   rtichoke:::add_hover_text_to_performance_data("several models", 
@@ -2319,7 +2338,7 @@ conventional <- plotly::plot_ly(
     data = rtichoke:::create_reference_lines_data_frame(
   "decision",
   plotly = TRUE,
-  0.312,
+  prevalence_for_nb_reference_line,
   performance_data = performance_data1
 ),
     x = ~x, 
@@ -2343,10 +2362,8 @@ conventional <- plotly::plot_ly(
   ) %>%
   rtichoke:::set_styling_for_rtichoke(
     "decision", 
-    max_y_range = max(performance_data1$NB,
-                      na.rm = TRUE) + 0.1,
-    min_y_range = min(performance_data1$NB[performance_data1$NB != -Inf],
-                      na.rm = TRUE) - 0.1) %>%
+    max_y_range = 0.25,
+    min_y_range = -0.01) %>%
   plotly::add_markers(
     data = performance_data1,
     x =~ threshold,
@@ -2361,13 +2378,13 @@ conventional <- plotly::plot_ly(
                   line = list(
                     width = 3, 
                     color = I("black"))) 
-)
+) 
 
 
 interventions_avoided <- rtichoke:::create_reference_lines_data_frame(
   "decision",
   plotly = TRUE,
-  0.312,
+  prevalence_for_nb_reference_line,
   performance_data = performance_data1
 ) %>%
   plotly::plot_ly(
@@ -2403,6 +2420,13 @@ interventions_avoided <- rtichoke:::create_reference_lines_data_frame(
                   line = list(
                     width = 3, 
                     color = I("black"))) 
+  ) %>% 
+  plotly::layout(
+    yaxis = list(
+      range = list(
+        -70, 80
+      )
+    )
   )
 
 
