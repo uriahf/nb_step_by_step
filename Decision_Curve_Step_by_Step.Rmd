@@ -90,7 +90,7 @@ You can visit his page on [mskcc.org/profile/andrew-vickers](https://www.mskcc.o
 
 # Code for Decision Curve Analysis 💻
 
-- Standard software is available to run decision curves in R, SAS and Stata on **[decisioncurveanalysis.org](www.decisioncurveanalysis.org)**. Python should be with us soon! 
+- Standard software is available to run decision curves in R, SAS and Stata on **[decisioncurveanalysis.org](https://www.mskcc.org/departments/epidemiology-biostatistics/biostatistics/decision-curve-analysis)**. Python should be with us soon! 
 
 - All interactive plots in this presentation were created with **[rtichoke](https://uriahf.github.io/rtichoke/)** R package (I am the author 👋).
 
