@@ -6,7 +6,24 @@ output:
       highlightStyle: github
       highlightLines: true
       countIncrementalSlides: false
+      ratio: 191:100
 ---
 
 background-image: url("Decision_Curve_Step_by_Step_files/sad.svg")
+
+```{r eval=FALSE, include=FALSE}
+
+webshot2::rmdshot(
+    doc = "render_image_for_social_card.Rmd",
+    file = "share-card.png",
+    vheight = 600,
+    vwidth = 600 * 191 / 100,
+    rmd_args = list(
+      output_options = list(
+        nature = list(ratio = "191:100"),
+        self_contained = TRUE
+      )
+    )
+  )
+```
 
