@@ -63,7 +63,7 @@ meta() %>%
     title = "Decision Curve - Step by Step",
     description = "This presentation follow the article `A simple, step-by-step  guide to interpreting decision curve analysis`",
     url = "https://nb-step-by-step.netlify.app/decision_curve_step_by_step",
-    # image = "https://haifa-to-clalit-innovation.netlify.app/share-card.png",
+    image = "https://nb-step-by-step.netlify.app/share-card.png",
     og_type = "website",
     og_author = "Uriah Finkel",
     twitter_card_type = "summary_large_image",
