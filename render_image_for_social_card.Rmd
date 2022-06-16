@@ -11,6 +11,11 @@ output:
 
 background-image: url("Decision_Curve_Step_by_Step_files/sad.svg")
 
+.inverse .remark-slide-number {
+  display: none;
+}
+
+
 ```{r eval=FALSE, include=FALSE}
 
 webshot2::rmdshot(
