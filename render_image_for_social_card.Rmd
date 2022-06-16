@@ -1,0 +1,12 @@
+---
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+
+background-image: url("Decision_Curve_Step_by_Step_files/sad.svg")
+
