@@ -41,7 +41,15 @@ library(reactable)
 style_duo_accent(
   primary_color = "#3A405A",
   secondary_color = "#F5DD90",
-  colors = c(red = "#ed1c24", green = "#007a45")
+  colors = c(red = "#ed1c24", green = "#007a45"),
+  link_color = "#F26157",
+  extra_fonts = list(
+    google_font("Commissioner")),
+  extra_css = list(
+    ".rtichoke_blog" = list(
+      "font-weight" = "700",
+      "font-family" = "Commissioner")
+  )
 )
 
 ```
@@ -93,7 +101,7 @@ meta() %>%
 I'd like to thank Dr. Andrew Vickers for his help with this presentation.
 
 
-You can visit his page on [mskcc.org/profile/andrew-vickers](https://www.mskcc.org/profile/andrew-vickers).
+You can visit his page on **[mskcc.org/profile/andrew-vickers](https://www.mskcc.org/profile/andrew-vickers)**.
 
 ---
 
@@ -109,7 +117,7 @@ You can visit his page on [mskcc.org/profile/andrew-vickers](https://www.mskcc.o
 
 - Standard software is available to run decision curves in R, SAS and Stata on **[decisioncurveanalysis.org](https://www.mskcc.org/departments/epidemiology-biostatistics/biostatistics/decision-curve-analysis)**. Python should be with us soon! 
 
-- All interactive plots in this presentation were created with **[rtichoke](https://uriahf.github.io/rtichoke/)** R package (I am the author 👋).
+- All interactive plots in this presentation were created with **[rtichoke](https://uriahf.github.io/rtichoke/)** R package (I am the author 👋), you are also invited to explore **.rtichoke_blog[[rtichoke blog](https://rtichoke-blog.netlify.app/)]** for reproducible examples and some theory.
 
 - For ggplot2 outputs **[dcurves](https://www.danieldsjoberg.com/dcurves)** R package is available on CRAN.   
 

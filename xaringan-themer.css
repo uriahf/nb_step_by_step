@@ -21,7 +21,7 @@
 @import url(https://fonts.googleapis.com/css?family=Noto+Sans:400,400i,700,700i&display=swap);
 @import url(https://fonts.googleapis.com/css?family=Cabin:600,600i&display=swap);
 @import url(https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700&display=swap);
-
+@import url(https://fonts.googleapis.com/css?family=Commissioner&display=swap);
 
 :root {
   /* Fonts */
@@ -46,13 +46,13 @@
   --text-color: #000000;
   --header-color: #3A405A;
   --background-color: #FFFFFF;
-  --link-color: #3A405A;
+  --link-color: #F26157;
   --text-bold-color: #3A405A;
   --code-highlight-color: rgba(255,255,0,0.5);
   --inverse-text-color: #000000;
   --inverse-background-color: #F5DD90;
   --inverse-header-color: #000000;
-  --inverse-link-color: #3A405A;
+  --inverse-link-color: #F26157;
   --title-slide-background-color: #3A405A;
   --title-slide-text-color: #FFFFFF;
   --header-background-color: #3A405A;
@@ -311,3 +311,10 @@ table.dataTable.hover tbody tr:hover, table.dataTable.display tbody tr:hover {
   background-color: var(--green);
 }
 
+
+
+/* Extra CSS */
+.rtichoke_blog {
+  font-weight: 700;
+  font-family: Commissioner;
+}
