@@ -148,19 +148,21 @@ class: center middle
 .right-column[
 ```{r echo=FALSE}
 library(rtichoke)
+library(magrittr)
+
 scenario1 <- read.csv("Decision_Curve_Step_by_Step_files/scenario1.csv")
 
-library(magrittr)
-library(rtichoke)
-
-create_roc_curve(
+performance_dat <- prepare_performance_data(
   probs = list(
     "First Model" = scenario1$modela,
     "Second Model" = scenario1$modelb
   ),
-  reals = list(scenario1$event),
-  size = 500
-) %>%
+  reals = list(scenario1$event)
+) 
+
+performance_dat %>% 
+  plot_roc_curve(
+    size = 450) %>% 
   plotly::animation_slider(
     currentvalue = list(prefix = "Probability Threshold: ",
                         font = list(color="black"),
@@ -197,7 +199,7 @@ create_calibration_curve(
   ),
   reals = list(scenario1$event),
   type = "smooth",
-  histogram_included = FALSE, size = 500
+  histogram_included = FALSE, size = 450
 ) %>% 
   plotly::partial_bundle()
 
@@ -225,31 +227,14 @@ class: center middle
 
 ```{r echo=FALSE}
 
-prepare_performance_data(
-   probs = list(
-    "First Model" = scenario1$modela,
-    "Second Model" = scenario1$modelb
-  ),
-  reals = list(scenario1$event)
-) %>% 
-  dplyr::filter(probability_threshold <= 0.2) %>% 
+performance_dat %>% 
   plot_decision_curve(
-  size = 500
-) %>%
-  plotly::animation_slider(
-    currentvalue = list(prefix = "Probability Threshold: ",
-                        font = list(color="black"),
-                        xanchor = "left")
-  ) %>% 
-  plotly::layout(
-    xaxis = list(
-      range = list(-0.01, 0.205)
-    ),
-    yaxis = list(
-      range = list(-0.01, 0.25)
-    )
+    # type = "interventions avoided",
+    size = 450,
+    min_p_threshold = 0,
+    max_p_threshold = 0.2
   )
-  
+
 ```
 
 ]
@@ -312,15 +297,8 @@ $$\begin{aligned}
 dc <- rtichoke::create_decision_curve(
   probs = list(scenario1$modela),
   reals = list(scenario1$event),
-  interactive = TRUE, size = 500
+  interactive = TRUE, size = 450
 ) %>% 
-  plotly::animation_slider(
-    currentvalue = list(prefix = "Probability Threshold: ", 
-                        font = list(color="black"),
-                        xanchor = "left"),
-    pad = list(t = 50), init = 5
-  )  %>% 
-  plotly::layout(xaxis = list(title = ''))  %>% 
   plotly::partial_bundle()
 
 dc
@@ -1175,17 +1153,12 @@ j_idx <- perf_dat %>%
 
 
 perf_dat %>% 
-  rtichoke::plot_roc_curve(interactive = TRUE, size = 500) %>% 
+  rtichoke::plot_roc_curve(interactive = TRUE, size = 450) %>% 
   plotly::add_annotations(
     text = "Youden's J Index",
     data = j_idx,
     x =~ FPR,
     y =~ sensitivity
-  ) %>% 
-  plotly::animation_slider(
-    currentvalue = list(font = list(color="black"),
-                        xanchor = "left"),
-    pad = list(t = 50)
   )
 
 ```
@@ -2321,179 +2294,11 @@ For the y axis instead of conventional Net Benefit you can use Interventions avo
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 
-# library(MASS)
-# data.set <- birthwt
-# model = glm(low ~ age + lwt, family=binomial(link="logit"), data=data.set)
-# model2 = glm(low ~ age, family=binomial(link="logit"), data=data.set)
-# 
-# data.set$predlow = predict(model, type="response")
-# data.set$predage = predict(model2, type="response")
-
-
-performance_data_dc <- rtichoke:::prepare_performance_data(
-  probs = list(
-    "First Model" = scenario1$modela,
-    "Second Model" = scenario1$modelb
-  ),
-  reals = list(scenario1$event)
-) 
-
-prevalence_for_nb_reference_line <- rtichoke:::get_prevalence_from_performance_data(
-    performance_data_dc) %>% 
-  unique()
-
-performance_data1 <- performance_data_dc %>%
-  rtichoke:::add_hover_text_to_performance_data("several models", 
-                                     curve = "decision") %>% 
-  dplyr::filter(probability_threshold > 0 & probability_threshold < 1)
-
-
-performance_data2 <- performance_data_dc  %>% 
-  dplyr::mutate(
-    N = TP +TN  + FP + FN,
-    prevalence = (TP + FN) / N,
-    NB_intervention_all =   prevalence - (1- prevalence) * 
-      (probability_threshold) / (1 - probability_threshold),
-    NB_treatment_avoided = 100 * (NB - NB_intervention_all) * 
-      ( (1 - probability_threshold) / probability_threshold )
-  ) %>% 
-  rtichoke:::add_hover_text_to_performance_data("several models", 
-                                     curve = "interventions avoided")%>% 
-  dplyr::filter(probability_threshold > 0 & probability_threshold < 1)
-
-conventional <- plotly::plot_ly(
-    height = 500,
-    width = 500
-  )  %>%
-  plotly::add_lines(
-    data = rtichoke:::create_reference_lines_data_frame(
-  "decision",
-  plotly = TRUE,
-  prevalence_for_nb_reference_line,
-  performance_data = performance_data1
-),
-    x = ~x, 
-    y = ~y,
-    color = I("grey"),
-    line = list(width = 1.75),
-    linetype = ~population,
-    hoverinfo = "text",
-    text =~ text
-  )  %>%
-  plotly::add_trace(
-    data = performance_data1,
-    x =~ probability_threshold,
-    y =~ NB,
-    type = "scatter",
-    mode = "markers+lines",
-    color = ~model,
-    # colors =  c("#5BC0BE","#FC8D62"),
-    hoverinfo = "text",
-    text =~ text
-  ) %>%
-  rtichoke:::set_styling_for_rtichoke(
-    "decision", 
-    max_y_range = 0.25,
-    min_y_range = -0.01) %>%
-  plotly::add_markers(
-    data = performance_data1,
-    x =~ probability_threshold,
-    y =~ NB,
-    color =~ model,
-    # colors =  c("#5BC0BE","#FC8D62"),
-    frame =~ probability_threshold,
-    hoverinfo = "text",
-    text =~ text,
-    size = 20, 
-    marker = list(size = 12, 
-                  line = list(
-                    width = 3, 
-                    color = I("black"))) 
-)  
-
-interventions_avoided <- rtichoke:::create_reference_lines_data_frame(
-  "decision",
-  plotly = TRUE,
-  prevalence_for_nb_reference_line,
-  performance_data = performance_data1
-) %>%
-  plotly::plot_ly(
-    x = ~x, 
-    y = ~y,
-    height = 500,
-    width = 500
-  )  %>%
-  plotly::add_trace(
-    data = performance_data2,
-    x =~ probability_threshold,
-    y =~ NB_treatment_avoided,
-    type = "scatter",
-    mode = "markers+lines",
-    color = ~model,
-    # colors =  c("#5BC0BE","#FC8D62"),
-    hoverinfo = "text",
-    text =~ text
-  ) %>%
-  rtichoke:::set_styling_for_rtichoke(
-    "interventions avoided") %>%
-  plotly::add_markers(
-    data = performance_data2,
-    x =~ probability_threshold,
-    y =~ NB_treatment_avoided,
-    color =~ model,
-    # colors =  c("#5BC0BE","#FC8D62"),
-    hoverinfo = "text",
-    text =~ text,
-    frame =~ probability_threshold,
-    size = 20, 
-    marker = list(size = 12, 
-                  line = list(
-                    width = 3, 
-                    color = I("black"))) 
-  ) %>% 
-  plotly::layout(
-    yaxis = list(
-      range = list(
-        -70, 80
-      )
-    )
-  )  
-
-
-a <- list(
-  text = "Interventions Avoided",
-  font = list(
-    # family = "Courier New, monospace",
-    size = 18,
-    color = "black"),
-  xref = "paper",
-  yref = "paper",
-  yanchor = "bottom",
-  xanchor = "center",
-  align = "center",
-  x = 0.5,
-  y = 1,
-  showarrow = FALSE
-) 
-
-b <- list(
-  text = "Net Benefit",
-  font = list(
-    # family = "Courier New, monospace",
-    size = 18,
-    color = "black"),
-  xref = "paper",
-  yref = "paper",
-  yanchor = "bottom",
-  xanchor = "center",
-  align = "center",
-  x = 0.5,
-  y = 1,
-  showarrow = FALSE
-) 
-
-
-interventions_avoided
+performance_dat %>% 
+  plot_decision_curve(
+    type = "interventions avoided",
+    size = 450
+  )
 
 ```
 
@@ -2518,14 +2323,10 @@ the highest net benefit.
 
 ```{r echo=FALSE}
 
- plotly::subplot(
-    interventions_avoided %>%
-      plotly::layout(annotations = a),
-    conventional %>%
-      plotly::layout(annotations = b), 
-    nrows = 2,
-    shareX = TRUE,
-    shareY = FALSE, heights = c(0.5, 0.5)
+performance_dat %>% 
+  plot_decision_curve(
+    type = "combined",
+    size = 450
   ) %>% 
   plotly::partial_bundle()
 
