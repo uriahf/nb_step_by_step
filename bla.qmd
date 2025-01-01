@@ -1,0 +1,25 @@
+---
+title: "green and red"
+format: revealjs
+editor: visual
+---
+
+# vla
+
+```{mermaid}
+
+%%| mermaid-format: svg
+%%{ init : { "flowchart" : { "curve" : "stepBefore" }}}%%
+  
+  flowchart LR
+
+%%==============================================================================
+  
+  
+  A[ ] --> |   Treatment   | B( )
+A[ ] --> |   No Treatment   | C( )
+B -->|   Disease: p   | a[a]
+B -->|   No Disease: 1-p   | b[b]
+C -->|   Disease: p   | c[c]
+C -->|   No Disease: 1-p   | d[d]
+```
